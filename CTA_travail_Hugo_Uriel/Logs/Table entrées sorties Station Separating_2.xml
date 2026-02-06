@@ -1,0 +1,7 @@
+<?xml version="1.0" standalone="no"?>
+<?xml-stylesheet type='text/xsl' href='MassDataHandlerLogFile.xsl'?>
+<LogFile titleName="Table entrées sorties Station Separating_2.xml" projectName="C:\Dossier E\Henallux\M1\Automatisation\Travail\Table entrées sorties Station Separating.xlsx" typeText="Type" messageText="Message" timeText="Time">
+  <LogEntry type="Error" dateTime="10:29:24 AM">
+    <Message>Error found while loading file C:\Dossier E\Henallux\M1\Automatisation\Travail\Table entrées sorties Station Separating.xlsx, the file may be in use or read-only.</Message>
+  </LogEntry>
+</LogFile>
