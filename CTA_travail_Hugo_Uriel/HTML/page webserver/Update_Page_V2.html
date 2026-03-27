@@ -1,0 +1,209 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+	<head>
+		<meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+		<title>Web page demo - Automatic update - Update page</title>
+		<script type="text/javascript">
+		 
+				 /* Polyfill : ajoute String.trim() si le navigateur ne le supporte pas */
+		 if (!String.trim)
+		 {
+					 String.prototype.trim = function () { return this.replace(/^(\s|\u00A0)+|(\s|\u00A0)+$/g, ''); };
+		 }
+		 
+		 /*
+		  * Point d'entrée : exécute au chargement de la page
+		  * - charge le fond sauvegardé
+		  * - met à jour la table des variables uniques
+		  * - lance le rafraîchissement périodique
+		  */
+		 function mainJavaScript()
+		 {
+		 	loadBackground();
+		 	updateSingleVariablesTable();
+		 	updateFrame();
+		 }
+			
+         /*
+          * Met à jour les éléments de la page principale
+          * à partir de la table `singleVariablesTable` présente ici.
+          * Parcourt les lignes et écrit la valeur dans l'élément
+          * identifié par l'ID indiqué dans la deuxième colonne.
+          */
+         function updateSingleVariablesTable()
+         {
+         	var table = document.getElementById("singleVariablesTable");
+         	for(i = 1; i < table.rows.length; i++)
+         	{
+         		var tagValue = table.rows[i].getElementsByTagName("td")[0].innerHTML;
+         		var tagId = table.rows[i].getElementsByTagName("td")[1].innerHTML.trim();
+         		parent.document.getElementById(tagId).innerHTML = tagValue;
+         	}
+         }
+		 
+		 /*
+		  * Planifie le rafraîchissement de la page après
+		  * le nombre de millisecondes défini dans `updateInterval`.
+		  */
+		 function updateFrame()
+		 {
+		 	window.setTimeout(function(){location.reload()}, document.getElementById("updateInterval").innerHTML.trim());
+		 }
+
+		 /* Fonctions utilitaires pour gérer l'arrière-plan */
+		 /* Définit un arrière-plan de couleur. `color` peut être un nom CSS, hex, rgb(...), etc. */
+		 function setBackgroundColor(color)
+		 {
+			document.body.style.backgroundImage = '';
+			document.body.style.background = color;
+			var col = document.getElementById('bgColor');
+			if(col) col.value = color;
+		 }
+
+		 /* Note: image-by-URL support removed per user request */
+
+         /* Définit un dégradé linéaire entre `color1` et `color2` (angle en degrés). */
+         function setBackgroundGradient(color1, color2, angle)
+         {
+        	angle = angle || 90;
+        	document.body.style.background = '';
+        	document.body.style.backgroundImage = 'linear-gradient(' + angle + 'deg, ' + color1 + ', ' + color2 + ')';
+        	var col = document.getElementById('bgColor');
+        	if(col) col.value = color1;
+         }
+
+         /* Réinitialise l'arrière-plan à l'état par défaut (blanc). */
+         function resetBackground()
+         {
+        	document.body.style.background = '';
+        	document.body.style.backgroundImage = '';
+       	var col = document.getElementById('bgColor');
+       	if(col) col.value = '#ffffff';
+         }
+
+         /*
+          * Sauvegarde le fond courant dans `localStorage` sous la clé
+          * `updatePageBackground`. Gère trois types : color, image, gradient.
+          */
+         function saveBackground()
+         {
+        	var cs = window.getComputedStyle(document.body);
+        	var bgImage = cs.backgroundImage;
+        	var bg = {};
+        	if (bgImage && bgImage !== 'none') {
+        	   if (bgImage.indexOf('linear-gradient') === 0) {
+        	      bg.type = 'gradient';
+        	      bg.value = bgImage;
+        	   } else {
+        	      bg.type = 'image';
+        	      var m = bgImage.match(/url\(("|')?(.*?)("|')?\)/);
+        	      bg.value = m ? m[2] : bgImage;
+        	   }
+        	} else {
+        	   bg.type = 'color';
+        	   bg.value = cs.backgroundColor;
+        	}
+       	localStorage.setItem('updatePageBackground', JSON.stringify(bg));
+       	alert('Fond sauvegardé.');
+         }
+
+         /*
+          * Lit un fichier image local (File) via FileReader et applique
+          * le Data URL obtenu en tant qu'arrière-plan. Vérifie que
+          * le fichier sélectionné est bien une image.
+          */
+         function handleLocalImageFile(file)
+         {
+        	if (!file) return;
+        	if (!file.type || file.type.indexOf('image/') !== 0) { alert('Sélectionnez un fichier image.'); return; }
+        	var reader = new FileReader();
+        	reader.onload = function(e) {
+        		var dataUrl = e.target.result;
+        		document.body.style.background = '';
+        		document.body.style.backgroundImage = 'url("' + dataUrl + '")';
+        		document.body.style.backgroundSize = 'cover';
+        		document.body.style.backgroundPosition = 'center center';
+        	};
+        	reader.readAsDataURL(file);
+         }
+
+         /* Charge depuis `localStorage` le fond précédemment sauvegardé
+          * et l'applique automatiquement au chargement de la page.
+          */
+         function loadBackground()
+         {
+        	var raw = localStorage.getItem('updatePageBackground');
+        	if (!raw) return;
+        	try {
+        	   var bg = JSON.parse(raw);
+        	   if (bg.type === 'color') {
+        	      setBackgroundColor(bg.value);
+        	   } else if (bg.type === 'image') {
+        	      document.body.style.background = '';
+        	      document.body.style.backgroundImage = 'url("' + bg.value + '")';
+        	      document.body.style.backgroundSize = 'cover';
+        	      document.body.style.backgroundPosition = 'center center';
+        	   } else if (bg.type === 'gradient') {
+        	      document.body.style.background = '';
+        	      document.body.style.backgroundImage = bg.value;
+        	   }
+        	} catch(e) { console.error(e); }
+         }
+		</script>
+
+	</head>
+<body onload="mainJavaScript()">
+
+    <div id="bgControls" style="margin:10px 0;">
+    	<label><strong>Couleur :</strong> <input id="bgColor" type="color" value="#ffffff"></label>
+    	<button type="button" onclick="setBackgroundColor(document.getElementById('bgColor').value)">Appliquer couleur</button>
+		<label style="margin-left:10px;"><strong>Importer depuis PC :</strong> <input id="bgFileInput" type="file" accept="image/*" onchange="handleLocalImageFile(this.files[0])"></label>
+    	<button type="button" onclick="setBackgroundGradient('#ff9a9e','#fad0c4')">Dégradé exemple</button>
+    	<button type="button" onclick="resetBackground()">Réinitialiser</button>
+    	<button type="button" onclick="saveBackground()">Sauvegarder</button>
+    	<button type="button" onclick="loadBackground()">Charger</button>
+    </div>
+
+		<table border="1">
+			<tr>
+				<td>
+					Update time in milliseconds
+				</td>
+			</tr>
+			<tr>
+				<td id="updateInterval">
+					1000
+				</td>
+			</tr>
+		</table>
+		<br/>
+
+	<table id="singleVariablesTable" border="1">
+		<tr>
+			<td>
+				AWP-Command to read variable
+			</td>
+			<td>
+				ID of the element of the main page which should be updated
+			</td>
+	    </tr>
+		<tr>
+		  <td>:=A0.0:</td>
+		  <td>Q0.0Id</td>
+	  </tr>
+		<tr>
+		  <td>:=M10.0:</td>
+		  <td>M10.0Id</td>
+	  </tr>
+		<tr>
+		  <td>:=MW100:</td>
+		  <td>MW100Id</td>
+	  </tr>
+		<tr>
+		  <td>:=MW2:</td>
+		  <td>MW2Id</td>
+	  </tr>
+	</table>
+
+</body>
+</html>
